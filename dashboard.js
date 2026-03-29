@@ -2,6 +2,7 @@ import { supabase, updateMessage } from './supabase.js'
 import { enableClick, disableClick, addMarker, clearMarkers, calculateDistance, drawLine, loadStreetViewAt, toggleView, resetStreetView, toggleCoverageLayer } from './game.js'
 import { initPeer, connectToPeer, sendData, setOnConnected, setOnData, setOnDisconnected } from './peer.js'
 import { findNearestCity } from './cities.js'
+import { ROUND_COMPLETE_DISTANCE_KM, buildGuessResult } from './roundLogic.mjs'
 
 // -- Challenge data --
 
@@ -227,6 +228,85 @@ function startSeekerGuessing() {
   })
 }
 
+function showGuessPending() {
+  state = 'waiting'
+  disableClick()
+  guessBtn.style.display = 'none'
+  toggleViewBtn.style.display = 'none'
+  resetStreetView()
+  setStatus('Guess sent! Waiting for result...')
+}
+
+function enableSeekerGuessPlacement() {
+  enableClick(async (latlng) => {
+    clearMarkers()
+    guessBtn.style.display = 'none'
+    toggleViewBtn.style.display = 'none'
+    setStatus('Checking for street view coverage...')
+
+    const hasImagery = await loadStreetViewAt(latlng.lat, latlng.lng)
+    if (!hasImagery) {
+      setStatus('No street view coverage here â€” try another spot')
+      return
+    }
+
+    guessLocation = latlng
+    addMarker(latlng)
+    guessBtn.style.display = ''
+    toggleViewBtn.style.display = ''
+    setStatus('Guess placed â€” use Toggle Street View to explore, then Send Guess')
+  })
+}
+
+function resumeSeekerGuessingAfterMiss(distanceKm) {
+  state = 'guessing'
+  distanceEl.textContent = 'Latest guess: ' + distanceKm + ' km away'
+  challengePanelEl.style.display = ''
+
+  if (guessLocation) {
+    clearMarkers()
+    addMarker(guessLocation)
+    guessBtn.style.display = ''
+    toggleViewBtn.style.display = ''
+  }
+
+  setStatus('Still more than ' + ROUND_COMPLETE_DISTANCE_KM + ' km away. Move your marker and guess again.')
+  enableSeekerGuessPlacement()
+}
+
+function showRoundSuccess(distanceKm) {
+  state = 'result'
+  disableClick()
+  confirmBtn.style.display = 'none'
+  guessBtn.style.display = 'none'
+  toggleViewBtn.style.display = 'none'
+  passTurnBtn.style.display = 'none'
+  challengePanelEl.style.display = 'none'
+  resetStreetView()
+  if (distanceKm <= 1) {
+    distanceEl.textContent = 'Found! Only ' + distanceKm + ' km away!'
+  } else {
+    distanceEl.textContent = 'Found within ' + ROUND_COMPLETE_DISTANCE_KM + ' km! Final distance: ' + distanceKm + ' km'
+  }
+
+  if (role === 'seeker') {
+    myGuessDistance = distanceKm
+  } else {
+    theirGuessDistance = distanceKm
+  }
+
+  if (round === 1) {
+    if (isInitiator) {
+      setStatus('Round 1 complete! Swapping roles in 3s...')
+      setTimeout(() => startRound2(), 3000)
+    } else {
+      setStatus('Round 1 complete! Waiting for role swap...')
+    }
+  } else {
+    showFinalResult()
+  }
+}
+
 function showResult(distanceKm) {
   state = 'result'
   disableClick()
@@ -336,11 +416,7 @@ coverageBtn.addEventListener('click', () => {
 
 guessBtn.addEventListener('click', () => {
   if (!guessLocation) return
-  disableClick()
-  guessBtn.style.display = 'none'
-  toggleViewBtn.style.display = 'none'
-  resetStreetView()
-  setStatus('Guess sent! Waiting for result...')
+  showGuessPending()
   sendData({ type: 'guess', lat: guessLocation.lat, lng: guessLocation.lng })
 })
 
@@ -573,19 +649,29 @@ setOnData((data) => {
     case 'guess':
       if (role === 'hider' && hiddenLocation) {
         const distanceKm = calculateDistance(hiddenLocation, { lat: data.lat, lng: data.lng })
+        const result = buildGuessResult(distanceKm)
         // Show both markers and line on hider's map
         clearMarkers()
         addMarker(hiddenLocation)
         addMarker({ lat: data.lat, lng: data.lng })
         drawLine(hiddenLocation, { lat: data.lat, lng: data.lng })
-        sendData({ type: 'result', distanceKm })
-        showResult(distanceKm)
+        sendData({ type: 'result', ...result })
+        if (result.found) {
+          showRoundSuccess(distanceKm)
+        } else {
+          distanceEl.textContent = 'Seeker is ' + distanceKm + ' km away'
+          setStatus('Seeker is still more than ' + ROUND_COMPLETE_DISTANCE_KM + ' km away. Waiting for another guess...')
+        }
       }
       break
 
     case 'result':
       if (role === 'seeker') {
-        showResult(data.distanceKm)
+        if (data.found) {
+          showRoundSuccess(data.distanceKm)
+        } else {
+          resumeSeekerGuessingAfterMiss(data.distanceKm)
+        }
       }
       break
 

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>jet lag digital edition</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="color-scheme" content="light dark">
+        <script src="theme.js"></script>
+      <script type="module" crossorigin src="/assets/dashboard-BuGGJx0M.js"></script>
+      <link rel="modulepreload" crossorigin href="/assets/supabase-CbrH9no3.js">
+      <link rel="stylesheet" crossorigin href="/assets/supabase-CGJmey9q.css">
+      <link rel="stylesheet" crossorigin href="/assets/dashboard-CgbAua2U.css">
+    </head>
+    <body>
+        <div id="user-info">
+            <p>Welcome, <span id="username"></span>!</p>
+            <a href="leaderboard.html">🏆 Leaderboard</a>
+            <button id="logout-btn">Log Out</button>
+        </div>
+
+        <div id="title-card">
+            <img src="/assets/title-BB3VrICl.png" alt="Jet Lag Digital Edition">
+
+        </div>
+
+        <div id="message"></div>
+
+        <div id="lobby-section">
+            <span id="my-peer-id" style="display:none;"></span>
+            <p>Status: <span id="peer-status">Connecting...</span></p>
+            <button id="create-lobby-btn" style="display:none;">Create Lobby</button>
+            <div id="lobby-list-container">
+                <p>Open Lobbies:</p>
+                <div id="lobby-list">Loading...</div>
+            </div>
+            <div id="player-slots" style="display:none;">
+                <div class="player-slot" id="slot-you">
+                    <span class="slot-label">You</span>
+                    <span class="slot-name" id="slot-you-name"></span>
+                </div>
+                <div class="player-slot" id="slot-them">
+                    <span class="slot-label">Opponent</span>
+                    <span class="slot-name" id="slot-them-name">Waiting...</span>
+                </div>
+            </div>
+            <button id="start-game-btn" style="display:none;">Start Game</button>
+        </div>
+
+        <p id="role"></p>
+        <p id="game-status"></p>
+        <p id="distance"></p>
+        <button id="confirm-location-btn" style="display:none;">Confirm Location</button>
+        <button id="pass-turn-btn" style="display:none;">Pass Turn to Seeker ➡</button>
+        <button id="send-guess-btn" style="display:none;">Send Guess</button>
+        <div id="challenge-panel" style="display:none;">
+          <div class="challenge-category" id="challenge-distance">
+            <div class="challenge-cat-header challenge-orange">
+              <span class="challenge-cat-icon">📡</span>
+              <div>
+                <div class="challenge-cat-name">Distance</div>
+                <div class="challenge-cat-sub">Within X of marker?</div>
+              </div>
+            </div>
+            <div class="challenge-cards-row">
+              <button class="challenge-card" data-threshold="1000">1000 km</button>
+              <button class="challenge-card" data-threshold="250">250 km</button>
+              <button class="challenge-card" data-threshold="50">50 km</button>
+            </div>
+          </div>
+          <div class="challenge-category" id="challenge-city">
+            <div class="challenge-cat-header challenge-green">
+              <span class="challenge-cat-icon">🏙</span>
+              <div>
+                <div class="challenge-cat-name">Nearest City</div>
+                <div class="challenge-cat-sub">Min. population</div>
+              </div>
+            </div>
+            <div class="challenge-cards-row">
+              <button class="challenge-card" data-pop="10000000">10M+</button>
+              <button class="challenge-card" data-pop="1000000">1M+</button>
+              <button class="challenge-card" data-pop="10000">10K+</button>
+              <button class="challenge-card" data-pop="100">Any</button>
+            </div>
+          </div>
+          <div class="challenge-category" id="challenge-latitude">
+            <div class="challenge-cat-header challenge-blue">
+              <span class="challenge-cat-icon">🧭</span>
+              <div>
+                <div class="challenge-cat-name">Latitude</div>
+                <div class="challenge-cat-sub">vs. marker</div>
+              </div>
+            </div>
+            <div class="challenge-cards-row">
+              <button class="challenge-card" id="challenge-lat-btn">N or S of me?</button>
+            </div>
+          </div>
+          <div class="challenge-category" id="challenge-quadrant">
+            <div class="challenge-cat-header challenge-purple">
+              <span class="challenge-cat-icon">🗺️</span>
+              <div>
+                <div class="challenge-cat-name">Quadrant</div>
+                <div class="challenge-cat-sub">NE/NW/SE/SW of me?</div>
+              </div>
+            </div>
+            <div class="challenge-cards-row">
+              <button class="challenge-card" id="challenge-quadrant-btn">Which quadrant?</button>
+            </div>
+          </div>
+          <div class="challenge-category" id="challenge-landlocked">
+            <div class="challenge-cat-header challenge-earth">
+              <span class="challenge-cat-icon">🏔️</span>
+              <div>
+                <div class="challenge-cat-name">Landlocked?</div>
+                <div class="challenge-cat-sub">Sea access?</div>
+              </div>
+            </div>
+            <div class="challenge-cards-row">
+              <button class="challenge-card" id="challenge-landlocked-btn">Landlocked?</button>
+            </div>
+          </div>
+          <div class="challenge-category" id="challenge-water">
+            <div class="challenge-cat-header challenge-teal">
+              <span class="challenge-cat-icon">🌊</span>
+              <div>
+                <div class="challenge-cat-name">Water</div>
+                <div class="challenge-cat-sub">Who's closer to coast?</div>
+              </div>
+            </div>
+            <div class="challenge-cards-row">
+              <button class="challenge-card" id="challenge-water-btn">Closer to coast?</button>
+            </div>
+          </div>
+          <div class="challenge-category" id="challenge-streetview">
+            <div class="challenge-cat-header challenge-amber">
+              <span class="challenge-cat-icon">👁️</span>
+              <div>
+                <div class="challenge-cat-name">Street View</div>
+                <div class="challenge-cat-sub">Describe what you see</div>
+              </div>
+            </div>
+            <div class="challenge-cards-row">
+              <button class="challenge-card" data-clue="language">Signs</button>
+              <button class="challenge-card" data-clue="road">Road</button>
+              <button class="challenge-card" data-clue="building">Building</button>
+            </div>
+          </div>
+          <div id="challenge-result-display"></div>
+        </div>
+        <div id="streetview-clue-input" style="display:none;">
+          <p id="streetview-clue-prompt"></p>
+          <textarea id="streetview-clue-text" rows="3" placeholder="Describe what you see..."></textarea>
+          <button id="streetview-clue-send-btn">Send Clue</button>
+        </div>
+        <button id="toggle-view-btn" style="display:none;">Toggle Street View / Map</button>
+        <button id="coverage-btn" style="display:none;">Show Coverage</button>
+        <div id="final-result" style="display:none;"></div>
+        <div id="view-container" style="display:none;">
+            <div id="map"></div>
+            <div id="street-view" style="display:none;"></div>
+        </div>
+
+    </body>
+</html>
