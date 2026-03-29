@@ -1,4 +1,4 @@
-export const ROUND_COMPLETE_DISTANCE_KM = 25
+export const ROUND_COMPLETE_DISTANCE_KM = 100
 
 export function isRoundComplete(distanceKm, thresholdKm = ROUND_COMPLETE_DISTANCE_KM) {
   return distanceKm <= thresholdKm

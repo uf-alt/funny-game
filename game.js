@@ -3,6 +3,7 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet.vectorgrid'
 import { Viewer } from 'mapillary-js'
 import 'mapillary-js/dist/mapillary.css'
+import { buildMapillaryBbox, clampLatitude, normalizeLongitude } from './mapillaryUtils.mjs'
 
 // Replace with your real Mapillary client token
 const MAPILLARY_CLIENT_TOKEN = 'MLY|25844880571805344|6ba16628259e52b4c83c5780a1dd1608'
@@ -65,11 +66,14 @@ function ensureViewer() {
  * Does NOT switch the visible view — use toggleView() for that.
  */
 export async function loadStreetViewAt(lat, lng) {
-  const delta = 0.005 // ~500m bounding box
-  const bbox = `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`
+  const bbox = buildMapillaryBbox(lat, lng)
   const url = `https://graph.mapillary.com/images?access_token=${MAPILLARY_CLIENT_TOKEN}&fields=id&bbox=${bbox}&limit=1`
   try {
     const res = await fetch(url)
+    if (!res.ok) {
+      console.warn('Mapillary lookup failed with status:', res.status, 'for bbox:', bbox, 'from lat/lng:', clampLatitude(lat), normalizeLongitude(lng))
+      return false
+    }
     const json = await res.json()
     if (json.data && json.data.length > 0) {
       const v = ensureViewer()

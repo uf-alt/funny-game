@@ -75,6 +75,7 @@ let isInitiator = false
 let round = 1          // 1 or 2
 let myGuessDistance = null   // distance when I was the seeker
 let theirGuessDistance = null // distance when they were the seeker
+let roundReadyToSwap = false
 
 // Lobby state
 let myLobbyId = null
@@ -163,6 +164,7 @@ function setRole(r) {
 
 function startHiderPicking() {
   state = 'picking'
+  roundReadyToSwap = false
   setStatus('Click the map to pick your hiding location')
   clearMarkers()
   hiddenLocation = null
@@ -191,12 +193,14 @@ function startHiderPicking() {
 
 function startSeekerWaiting() {
   state = 'waiting'
+  roundReadyToSwap = false
   setStatus('Waiting for hider to pick a location...')
   disableClick()
 }
 
 function startSeekerGuessing() {
   state = 'guessing'
+  roundReadyToSwap = false
   setStatus('Hider is ready! Click the map to place your guess')
   clearMarkers()
   guessLocation = null
@@ -262,6 +266,10 @@ function resumeSeekerGuessingAfterMiss(distanceKm) {
   state = 'guessing'
   distanceEl.textContent = 'Latest guess: ' + distanceKm + ' km away'
   challengePanelEl.style.display = ''
+  challengeResultEl.textContent = ''
+  unlockChallenges()
+  streetviewClueInput.style.display = 'none'
+  streetviewClueText.value = ''
 
   if (guessLocation) {
     clearMarkers()
@@ -276,6 +284,7 @@ function resumeSeekerGuessingAfterMiss(distanceKm) {
 
 function showRoundSuccess(distanceKm) {
   state = 'result'
+  roundReadyToSwap = true
   disableClick()
   confirmBtn.style.display = 'none'
   guessBtn.style.display = 'none'
@@ -342,7 +351,9 @@ function showResult(distanceKm) {
 }
 
 function startRound2() {
+  if (!roundReadyToSwap) return
   round = 2
+  roundReadyToSwap = false
   clearMarkers()
   hiddenLocation = null
   guessLocation = null
@@ -626,7 +637,12 @@ setOnData((data) => {
     case 'role':
       // If we're already past round 1, this is the round 2 role swap
       if (round === 1 && role !== null) {
+        if (!roundReadyToSwap) {
+          console.warn('Ignoring unexpected role swap before round completion')
+          break
+        }
         round = 2
+        roundReadyToSwap = false
         clearMarkers()
         hiddenLocation = null
         guessLocation = null
@@ -842,6 +858,7 @@ setOnDisconnected(() => {
   state = 'waiting'
   role = null
   round = 1
+  roundReadyToSwap = false
   myGuessDistance = null
   theirGuessDistance = null
   isInitiator = false
