@@ -1,1 +1,11 @@
 .pommel/
+.claude/
+.playwright-mcp/
+.vs/
+node_modules/
+.pommelignore
+.mcp.json
+CLAUDE.md
+nul
+package-lock.json
+package.json
