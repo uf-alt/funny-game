@@ -7,5 +7,3 @@ node_modules/
 .mcp.json
 CLAUDE.md
 nul
-package-lock.json
-package.json
